@@ -16,6 +16,6 @@ export async function POST(request: Request) { return endpoint(async () => {
   const input = await mutationBody(request); let movie;
   try { movie = movieInput(input); } catch (e) { throw new ApiError(400, (e as Error).message); }
   const voter = await voterHash(); await rateLimit(request, "post", voter);
-  const { data, error } = await adminClient().rpc("recommend_movie", { p_title: movie.title, p_normalized: movie.normalized_title, p_year: movie.release_year, p_comment: movie.comment, p_voter: voter });
+  const { data, error } = await adminClient().rpc("recommend_movie", { p_title: movie.title, p_normalized: movie.normalized_title, p_year: movie.release_year, p_comment: movie.comment, p_voter: voter, p_nickname: movie.nickname, p_tmdb_id: movie.tmdb_id, p_poster: movie.poster_path });
   databaseError(error); return json({ id: data }, 201);
 }); }

@@ -25,10 +25,10 @@ export async function voterHash() {
   if (identity.isNew) store.set("movie_voter", identity.cookie, { ...options, maxAge: 31_536_000 });
   return identity.hash;
 }
-export async function rateLimit(request: Request, action: "post" | "vote" | "login" | "admin", voter?: string) {
+export async function rateLimit(request: Request, action: "post" | "vote" | "login" | "admin" | "search", voter?: string) {
   // Vercel replaces x-forwarded-for at its edge. Do not trust it outside Vercel.
   const ip = process.env.VERCEL ? request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown" : "local";
-  const rules = { post: [3600, 10, 50], vote: [60, 40, 200], login: [900, 10, 15], admin: [60, 60, 100] };
+  const rules = { post: [3600, 10, 50], vote: [60, 40, 200], login: [900, 10, 15], admin: [60, 60, 100], search: [60, 120, 600] };
   const [window, personal, network] = rules[action];
   const entries = [[`ip:${ip}`, network], ...(voter ? [[`voter:${voter}`, personal]] : [])] as [string, number][];
   for (const [identity, limit] of entries) {
