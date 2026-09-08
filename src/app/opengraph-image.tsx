@@ -9,7 +9,7 @@ export const contentType = "image/png";
 
 const EYEBROW = "COMMUNITY WATCHLIST";
 const TITLE = "はるとのMOVIE ROOM";
-const LEAD = "次に観る映画を、みんなで。";
+const LEAD = "“はると”が次に観る映画を、みんなで。";
 const NOTE = "おすすめを投稿して、気になる一本に「観たい」を。";
 
 /**
@@ -45,7 +45,7 @@ export default async function OpengraphImage() {
       <div style={{ display: "flex", flexDirection: "column", width: 640 }}>
         <div style={{ display: "flex", fontSize: 21, letterSpacing: 6, color: "#dcec9b", fontWeight: 700 }}>{EYEBROW}</div>
         <div style={{ display: "flex", fontSize: 54, fontWeight: 700, color: "#fff", marginTop: 24, letterSpacing: -1, whiteSpace: "nowrap" }}>{TITLE}</div>
-        <div style={{ display: "flex", fontSize: 38, fontWeight: 700, color: "#dcec9b", marginTop: 20 }}>{LEAD}</div>
+        <div style={{ display: "flex", fontSize: 33, fontWeight: 700, color: "#dcec9b", marginTop: 20, whiteSpace: "nowrap" }}>{LEAD}</div>
         <div style={{ display: "flex", fontSize: 24, color: "#cfdcc9", marginTop: 24, lineHeight: 1.6 }}>{NOTE}</div>
       </div>
       {/* eslint-disable-next-line @next/next/no-img-element */}
