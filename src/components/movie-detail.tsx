@@ -13,6 +13,8 @@ export default function MovieDetailView({ id }: { id: string }) {
   const [loading, setLoading] = useState(true), [error, setError] = useState(""), [admin, setAdmin] = useState(false);
   const [voting, setVoting] = useState(false), [busy, setBusy] = useState(false);
   const [formError, setFormError] = useState(""), [notice, setNotice] = useState("");
+  // あらすじが長いと、肝心の「おすすめしたい」が画面の外へ押し出される。既定は5行で畳む。
+  const [wholeSynopsis, setWholeSynopsis] = useState(false);
 
   const load = useCallback(async () => {
     try { setDetail(await api<MovieDetail>(`/api/movies/${id}`)); setError(""); }
@@ -58,7 +60,7 @@ export default function MovieDetailView({ id }: { id: string }) {
           <div className="detail-info">
             <div className="movie-title"><h1>{movie.title}</h1>{movie.status !== "unwatched" && <span className={`badge ${movie.status}`}>{statusLabels[movie.status]}</span>}</div>
             <p className="meta">{movie.release_year ? `${movie.release_year}年公開` : "公開年未登録"}{movie.director && <><span>·</span>{`監督 ${movie.director}`}</>}{movie.runtime ? <><span>·</span>{runtimeLabel(movie.runtime)}</> : null}<span>·</span>{`${movie.vote_count}票`}<span>·</span>{`おすすめコメント${movie.comment_count}件`}</p>
-            {movie.overview && <div className="overview"><p className="eyebrow">あらすじ</p><p>{movie.overview}</p></div>}
+            {movie.overview && <div className="overview"><p className="eyebrow">あらすじ</p><p className={wholeSynopsis ? "" : "clamped"}>{movie.overview}</p>{movie.overview.length > 110 && <button className="link-button" onClick={() => setWholeSynopsis(v => !v)}>{wholeSynopsis ? "閉じる" : "続きを読む"}</button>}</div>}
             {movie.status === "watched"
               ? <p className="detail-closed">この作品は視聴済みです。おすすめの受付は終了しました。</p>
               : movie.voted
