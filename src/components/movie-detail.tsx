@@ -60,10 +60,10 @@ export default function MovieDetailView({ id }: { id: string }) {
             <p className="meta">{movie.release_year ? `${movie.release_year}年公開` : "公開年未登録"}{movie.director && <><span>·</span>{`監督 ${movie.director}`}</>}{movie.runtime ? <><span>·</span>{runtimeLabel(movie.runtime)}</> : null}<span>·</span>{`${movie.vote_count}票`}<span>·</span>{`おすすめコメント${movie.comment_count}件`}</p>
             {movie.overview && <div className="overview"><p className="eyebrow">あらすじ</p><p>{movie.overview}</p></div>}
             {movie.status === "watched"
-              ? <p className="detail-closed">この作品は視聴済みです。投票は終了しました。</p>
+              ? <p className="detail-closed">この作品は視聴済みです。おすすめの受付は終了しました。</p>
               : movie.voted
-                ? <div className="detail-actions"><button className="vote selected" onClick={() => { setFormError(""); setVoting(true); }} disabled={busy}><span className="vote-number"><span aria-hidden="true">♥</span> {movie.vote_count}</span><span>投票済み</span></button><button className="plain-button" disabled={busy} onClick={() => void cancelVote()}>投票を取り消す</button></div>
-                : <button className="primary" disabled={busy} onClick={() => { setFormError(""); setVoting(true); }}><span aria-hidden="true">♡</span> 観たい に投票する</button>}
+                ? <div className="detail-actions"><button className="vote selected" onClick={() => { setFormError(""); setVoting(true); }} disabled={busy}><span className="vote-number"><span aria-hidden="true">♥</span> {movie.vote_count}</span><span>おすすめ済み</span></button><button className="plain-button" disabled={busy} onClick={() => void cancelVote()}>おすすめを取り消す</button></div>
+                : <button className="primary" disabled={busy} onClick={() => { setFormError(""); setVoting(true); }}><span aria-hidden="true">♡</span> おすすめしたい</button>}
             {movie.voted && movie.my_comment && <div className="my-comment"><p className="eyebrow">あなたのおすすめポイント</p><p>{movie.my_comment}</p><button className="plain-button" disabled={busy} onClick={() => { setFormError(""); setVoting(true); }}>書き直す</button></div>}
             {movie.voted && !movie.my_comment && movie.status !== "watched" && <p className="form-note">おすすめポイントはまだ書かれていません。<button className="link-button" onClick={() => { setFormError(""); setVoting(true); }}>いま書く</button></p>}
           </div>

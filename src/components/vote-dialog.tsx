@@ -5,7 +5,7 @@ import { COMMENT_MAX, NICKNAME_MAX } from "@/lib/model";
 import { rememberNickname, rememberedNickname } from "@/lib/client";
 
 /**
- * 「観たい」を押したときに開く。おすすめポイントは任意なので、
+ * 「おすすめしたい」を押したときに開く。おすすめポイントは任意なので、
  * 空のまま送れば「無言の1票」として成立する。
  */
 export default function VoteDialog({ movieTitle, editing, initialComment = "", initialNickname = "", busy, error, onSubmit, onClose }: {
@@ -27,7 +27,7 @@ export default function VoteDialog({ movieTitle, editing, initialComment = "", i
         <small>次に投票するときも同じ名前が入ります</small>
       </label>
       {error && <p className="form-error" role="alert">{error}</p>}
-      <button className="primary full" type="submit" disabled={busy}>{busy ? "送信中…" : editing ? "書き直す" : "観たいを届ける ↗"}</button>
+      <button className="primary full" type="submit" disabled={busy}>{busy ? "送信中…" : editing ? "書き直す" : "おすすめを届ける ↗"}</button>
     </form>
   </Modal>;
 }

@@ -3,14 +3,14 @@ import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 // Xや各種SNSにURLを貼ったときに出るカード画像。
-export const alt = "はるとのMOVIE ROOM｜次に観る映画を、みんなで。";
+export const alt = "はるとのMOVIE ROOM｜“はると”が次に観る映画を、みんなで。";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
 const EYEBROW = "COMMUNITY WATCHLIST";
 const TITLE = "はるとのMOVIE ROOM";
 const LEAD = "“はると”が次に観る映画を、みんなで。";
-const NOTE = "おすすめを投稿して、気になる一本に「観たい」を。";
+const NOTE = "おすすめを投稿して、気になる一本に「おすすめしたい」を。";
 
 /**
  * 画像生成に使う既定フォントは日本語の字形を持たないため、
@@ -46,7 +46,7 @@ export default async function OpengraphImage() {
         <div style={{ display: "flex", fontSize: 21, letterSpacing: 6, color: "#dcec9b", fontWeight: 700 }}>{EYEBROW}</div>
         <div style={{ display: "flex", fontSize: 54, fontWeight: 700, color: "#fff", marginTop: 24, letterSpacing: -1, whiteSpace: "nowrap" }}>{TITLE}</div>
         <div style={{ display: "flex", fontSize: 33, fontWeight: 700, color: "#dcec9b", marginTop: 20, whiteSpace: "nowrap" }}>{LEAD}</div>
-        <div style={{ display: "flex", fontSize: 24, color: "#cfdcc9", marginTop: 24, lineHeight: 1.6 }}>{NOTE}</div>
+        <div style={{ display: "flex", fontSize: 22, color: "#cfdcc9", marginTop: 24, lineHeight: 1.6 }}>{NOTE}</div>
       </div>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img src={character} alt="" width={380} height={380} />
