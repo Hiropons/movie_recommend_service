@@ -19,10 +19,11 @@ test('PostgreSQL schema, atomic votes, rankings and access controls', async t =>
     const legacy = (await query('select recommend_movie($1,$2,$3,$4,$5) id', ['Legacy', 'legacy', 1999, '旧仕様のコメント', voter])).rows[0].id;
     await db.exec(await migration('003_comments.sql'));
     await db.exec(await migration('004_tmdb.sql'));
+    await db.exec(await migration('005_tmdb_details.sql'));
 
     const create = async (title, year = null, opts = {}) => {
-      const { comment = 'ネタバレなし', nickname = '', tmdb = null, poster = null } = opts;
-      return (await query('select recommend_movie($1,$2,$3,$4,$5,$6,$7,$8) id', [title, title.toLowerCase(), year, comment, voter, nickname, tmdb, poster])).rows[0].id;
+      const { comment = 'ネタバレなし', nickname = '', tmdb = null, poster = null, director = '', overview = '', runtime = null } = opts;
+      return (await query('select recommend_movie($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) id', [title, title.toLowerCase(), year, comment, voter, nickname, tmdb, poster, director, overview, runtime])).rows[0].id;
     };
     const vote = (id, who, voted, comment = '', nickname = '') => query('select set_movie_vote($1,$2,$3,$4,$5)', [id, who, voted, comment, nickname]);
     const list = async (filter = 'all', search = '', offset = 0, limit = 30) => (await query('select list_movies($1,$2,$3,$4,$5,$6) feed', [voter, search, filter, 'votes', offset, limit])).rows[0].feed;
@@ -52,8 +53,24 @@ test('PostgreSQL schema, atomic votes, rankings and access controls', async t =>
       // TMDBに無い作品は tmdb_id が null のまま重ならない。
       await create('Handwritten One'); await create('Handwritten Two');
     });
+    await t.test('director, synopsis and runtime survive to the film page', async () => {
+      const id = await create('Director Test', 2014, { tmdb: 999001, director: 'クリストファー・ノーラン', overview: '近未来の地球では植物が枯れ、', runtime: 169 });
+      const view = await detail(id);
+      assert.equal(view.movie.director, 'クリストファー・ノーラン');
+      assert.equal(view.movie.overview, '近未来の地球では植物が枯れ、');
+      assert.equal(view.movie.runtime, 169);
+      // 手入力の作品はこれらを持たないが、ページ自体は壊れない。
+      const plain = await detail(second);
+      assert.equal(plain.movie.director, '');
+      assert.equal(plain.movie.runtime, null);
+    });
+    await t.test('runtime and synopsis are bounded', async () => {
+      await assert.rejects(() => create('Too Long', null, { tmdb: 999002, runtime: 5000 }), /runtime_range/);
+      await assert.rejects(() => create('Too Wordy', null, { tmdb: 999003, overview: 'あ'.repeat(2001) }), /overview_length/);
+      await assert.rejects(() => create('Too Many', null, { tmdb: 999004, director: 'あ'.repeat(121) }), /director_length/);
+    });
     await t.test('failed first vote rolls the entire recommendation back', async () => {
-      await assert.rejects(() => query('select recommend_movie($1,$2,$3,$4,$5,$6,$7,$8)', ['Rollback', 'rollback', null, '', null, '', null, null]));
+      await assert.rejects(() => query('select recommend_movie($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)', ['Rollback', 'rollback', null, '', null, '', null, null, '', '', null]));
       assert.equal((await list('all', 'rollback')).total, 0);
     });
     await t.test('repeat requests do not duplicate votes; cancellation only removes own vote', async () => {

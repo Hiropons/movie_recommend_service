@@ -49,7 +49,7 @@ export default function MovieRoom() {
   // 投稿フォームでは、すでに登録済みの作品とTMDBの候補を同時に探す。
   // 表示は「いま入力中の語に対する結果か」を毎回描画時に判定するので、
   // 打ち直した瞬間に古い候補が残らない。
-  const term = modal === "post" && !picked ? draft.title.trim() : "";
+  const term = (modal === "post" && !picked) || modal === "edit" ? draft.title.trim() : "";
   const fresh = term.length >= 2 && results.term === term;
   const suggestions = fresh ? results.existing : [], tmdb = fresh ? results.tmdb : [];
   const tmdbOff = fresh && results.off, searching = term.length >= 2 && !fresh;
@@ -104,6 +104,15 @@ export default function MovieRoom() {
     try { await adminRequest(`/api/movies/${selected.id}`, "DELETE", {}); setUndoId(selected.id); setNotice(`「${selected.title}」をリストから削除しました`); setModal(null); await refresh(true); }
     catch (e) { setFormError((e as Error).message); } finally { setBusy(false); }
   }
+  // 手入力で登録された作品を、あとから映画データベースの作品に結び付け直す。
+  // 監督・あらすじ・ポスターまでサーバー側で取り込まれる。
+  async function relinkMovie(r: TmdbResult) {
+    if (!selected || busy) return; setBusy(true); setFormError("");
+    try {
+      await adminRequest(`/api/movies/${selected.id}`, "PATCH", { title: r.title, release_year: r.release_year ?? "", tmdb_id: r.tmdb_id, poster_path: r.poster_path });
+      setNotice(`「${r.title}」の情報を映画データベースから取り込みました`); setModal(null); await refresh(true);
+    } catch (e) { setFormError((e as Error).message); } finally { setBusy(false); }
+  }
   async function undoDelete() { if (!undoId) return; setBusy(true); try { await adminRequest(`/api/movies/${undoId}`, "PATCH", { restore: true }); setUndoId(null); setNotice("映画を元に戻しました"); await refresh(true); } catch (e) { setNotice((e as Error).message); } finally { setBusy(false); } }
   async function logout() { setBusy(true); try { await api("/api/admin/logout", { method: "POST", body: {} }); setAdmin(false); setUndoId(null); setNotice("ログアウトしました"); } catch (e) { setNotice((e as Error).message); } finally { setBusy(false); } }
 
@@ -143,7 +152,16 @@ export default function MovieRoom() {
       <p className="form-note">投稿時にあなたの「観たい」が1票入ります。</p>
     </form>}
   </Modal>}
-  {modal === "edit" && <Modal title="映画の情報を編集" onClose={closeModal} busy={busy}><p className="modal-description">映画名や公開年の間違いを修正できます。おすすめポイントは投稿者本人のものなので変更されません。</p><form onSubmit={saveMovie}><label className="field">映画名 <span>必須</span><input autoFocus required maxLength={100} value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} /></label><label className="field">公開年 <span>任意</span><input inputMode="numeric" maxLength={4} pattern="[0-9]{4}" value={draft.release_year} onChange={e => setDraft({ ...draft, release_year: e.target.value })} /></label>{formError && <p className="form-error" role="alert">{formError}</p>}<button className="primary full" disabled={busy} type="submit">{busy ? "保存中…" : "変更を保存する"}</button></form></Modal>}
+  {modal === "edit" && selected && <Modal title="映画の情報を編集" onClose={closeModal} busy={busy}>
+    <p className="modal-description">{selected.tmdb_id ? "映画データベースに登録済みの作品です。別の作品として登録されている場合は、選び直せます。" : "この作品は手入力で登録されています。映画データベースから選び直すと、正式な題名・公開年・ポスター・監督・あらすじがまとめて入ります。"}</p>
+    <div className="current-link"><span className={`tag ${selected.tmdb_id ? "" : "warn"}`}>{selected.tmdb_id ? "データベース登録済み" : "手入力"}</span><strong>{selected.title}</strong><span>{selected.release_year ? `${selected.release_year}年` : "公開年未登録"}{selected.director && ` · 監督 ${selected.director}`}</span></div>
+    <label className="field">映画データベースから探す <span>2文字以上</span><input autoFocus maxLength={100} value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} /></label>
+    {searching && <p className="form-note">候補を探しています…</p>}
+    {tmdb.length > 0 && <div className="tmdb-results"><p>選ぶとこの作品の情報が置き換わります</p>{tmdb.map(r => { const thumb = posterUrl(r.poster_path); return <button type="button" key={r.tmdb_id} disabled={busy} onClick={() => void relinkMovie(r)}>{thumb ? <Image src={thumb} alt="" width={40} height={60} /> : <span className="thumb placeholder small" aria-hidden="true">✦</span>}<span className="tmdb-text"><strong>{r.title}</strong><span>{r.release_year ?? "公開年不明"}</span></span></button>; })}</div>}
+    {tmdbOff && <p className="form-note">映画データベースに接続できませんでした。下の手入力で直せます。</p>}
+    {formError && <p className="form-error" role="alert">{formError}</p>}
+    <details className="manual-edit"><summary>手入力で直す</summary><form onSubmit={saveMovie}><label className="field">映画名 <span>必須</span><input required maxLength={100} value={draft.title} onChange={e => setDraft({ ...draft, title: e.target.value })} /></label><label className="field">公開年 <span>任意</span><input inputMode="numeric" maxLength={4} pattern="[0-9]{4}" value={draft.release_year} onChange={e => setDraft({ ...draft, release_year: e.target.value })} /></label><button className="secondary full" disabled={busy} type="submit">{busy ? "保存中…" : "手入力の内容で保存する"}</button></form></details>
+  </Modal>}
   {modal === "login" && <Modal title="配信者ログイン" onClose={closeModal} busy={busy}><p className="modal-description">配信者用アカウントでログインしてください。</p><form onSubmit={login}><label className="field">メールアドレス<input autoFocus type="email" name="email" required autoComplete="username" /></label><label className="field">パスワード<input type="password" name="password" required autoComplete="current-password" /></label>{formError && <p className="form-error" role="alert">{formError}</p>}<button className="primary full" type="submit" disabled={busy}>{busy ? "確認中…" : "ログイン"}</button></form></Modal>}
   {modal === "delete" && selected && <Modal title="映画をリストから削除" onClose={closeModal} busy={busy}><p className="modal-description">「{selected.title}」を削除します。削除後の通知から元に戻せます。</p>{formError && <p className="form-error" role="alert">{formError}</p>}<div className="dialog-actions"><button className="secondary" disabled={busy} onClick={closeModal}>キャンセル</button><button className="danger" disabled={busy} onClick={() => void deleteMovie()}>{busy ? "削除中…" : "削除する"}</button></div></Modal>}
   </>;

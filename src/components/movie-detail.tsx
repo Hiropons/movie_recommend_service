@@ -3,7 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { api } from "@/lib/client";
-import { displayName, posterUrl, statusLabels, type MovieDetail } from "@/lib/model";
+import { displayName, posterUrl, runtimeLabel, statusLabels, type MovieDetail } from "@/lib/model";
 import VoteDialog from "./vote-dialog";
 
 const stamp = (iso: string) => new Date(iso).toLocaleString("ja-JP", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Tokyo" });
@@ -57,7 +57,8 @@ export default function MovieDetailView({ id }: { id: string }) {
           {poster ? <Image className="detail-poster" src={poster} alt={`${movie.title}のポスター`} width={200} height={300} priority /> : <div className="detail-poster placeholder" aria-hidden="true">no image</div>}
           <div className="detail-info">
             <div className="movie-title"><h1>{movie.title}</h1>{movie.status !== "unwatched" && <span className={`badge ${movie.status}`}>{statusLabels[movie.status]}</span>}</div>
-            <p className="meta">{movie.release_year ? `${movie.release_year}年公開` : "公開年未登録"}<span>·</span>{movie.vote_count}票<span>·</span>おすすめコメント{movie.comment_count}件</p>
+            <p className="meta">{movie.release_year ? `${movie.release_year}年公開` : "公開年未登録"}{movie.director && <><span>·</span>{`監督 ${movie.director}`}</>}{movie.runtime ? <><span>·</span>{runtimeLabel(movie.runtime)}</> : null}<span>·</span>{`${movie.vote_count}票`}<span>·</span>{`おすすめコメント${movie.comment_count}件`}</p>
+            {movie.overview && <div className="overview"><p className="eyebrow">あらすじ</p><p>{movie.overview}</p></div>}
             {movie.status === "watched"
               ? <p className="detail-closed">この作品は視聴済みです。投票は終了しました。</p>
               : movie.voted

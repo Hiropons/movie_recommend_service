@@ -1,9 +1,16 @@
 export type MovieStatus = "unwatched" | "next" | "watched";
-export type Movie = { id: string; title: string; release_year: number | null; status: MovieStatus; created_at: string; vote_count: number; comment_count: number; voted: boolean; tmdb_id: number | null; poster_path: string | null };
+export type Movie = { id: string; title: string; release_year: number | null; status: MovieStatus; created_at: string; vote_count: number; comment_count: number; voted: boolean; tmdb_id: number | null; poster_path: string | null; director: string; overview: string; runtime: number | null };
 export type Comment = { id: string; nickname: string; comment: string; created_at: string; mine: boolean };
 export type MovieDetail = { movie: Movie & { my_comment: string; my_nickname: string }; comments: Comment[] };
 export type Feed = { movies: Movie[]; next: Movie[]; total: number; page: number; pageSize: number };
 export type TmdbResult = { tmdb_id: number; title: string; release_year: number | null; poster_path: string | null; overview: string };
+export type TmdbDetails = { tmdb_id: number; title: string; release_year: number | null; poster_path: string | null; director: string; overview: string; runtime: number | null };
+/** 169 → 「2時間49分」 */
+export function runtimeLabel(minutes: number | null) {
+  if (!minutes || minutes < 1) return "";
+  const h = Math.floor(minutes / 60), m = minutes % 60;
+  return h ? `${h}時間${m ? `${m}分` : ""}` : `${m}分`;
+}
 export const statusLabels: Record<MovieStatus, string> = { unwatched: "未視聴", next: "次に観る", watched: "視聴済み" };
 export const COMMENT_MAX = 300, NICKNAME_MAX = 20;
 export const posterUrl = (path: string | null, size: "w154" | "w342" = "w154") => path ? `https://image.tmdb.org/t/p/${size}${path}` : null;
